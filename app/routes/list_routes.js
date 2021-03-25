@@ -2,7 +2,7 @@ const express = require('express')
 const passport = require('passport')
 
 // pull in Mongoose model
-const ListItem = require('../models/list_item')
+const List = require('../models/list_item')
 
 // this is a collection of methods that help us detect situations when we need
 // to throw a custom error
@@ -16,7 +16,7 @@ const requireOwnership = customErrors.requireOwnership
 
 // this is middleware that will remove blank fields from `req.body`, e.g.
 // { example: { title: '', text: 'foo' } } -> { example: { text: 'foo' } }
-const removeBlanks = require('../../lib/remove_blank_fields')
+// const removeBlanks = require('../../lib/remove_blank_fields')
 // passing this as a second argument to `router.<verb>` will make it
 // so that a token MUST be passed for that route to be available
 // it will also set `req.user`
@@ -29,7 +29,7 @@ const router = express.Router()
 // GET /lists/user
 router.get('/lists', requireToken, (req, res, next) => {
   // console.log('user is ', req.user)
-  ListItem.find({ owner: req.user._id })
+  List.find({ owner: req.user._id })
     .populate('owner', '_id email')
     .then(lists => lists.map(list => list.toObject()))
     .then(lists => {
@@ -44,7 +44,7 @@ router.post('/lists', requireToken, (req, res, next) => {
   // set owner of new list to be current user
   req.body.list.owner = req.user.id
 
-  ListItem.create(req.body.list)
+  List.create(req.body.list)
     .then(list => {
       res.status(201).json({ list: list.toObject() })
     })
@@ -54,7 +54,7 @@ router.post('/lists', requireToken, (req, res, next) => {
 // DESTROY
 // DELETE /lists/5a7db6c74d55bc51bdf39793
 router.delete('/lists/:id', requireToken, (req, res, next) => {
-  ListItem.findById(req.params.id)
+  List.findById(req.params.id)
     .then(handle404)
     .then(list => {
       requireOwnership(req, list)
